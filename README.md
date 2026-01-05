@@ -1,199 +1,240 @@
-# Seismic Precursors of LLM Degradation: LRD/QO3/FIO Bridge
+# 🌋 Seismic Precursors of LLM Degradation v2.1
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18145167.svg)](https://doi.org/10.5281/zenodo.18145167)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![HuggingFace Space](https://img.shields.io/badge/🤗-HuggingFace%20Space-yellow)](https://huggingface.co/spaces/YOUR_USERNAME/LRD-LLM-Precursors)
 
-**Minimal reproducible demo:** Token-level entropy, Hurst exponent, and repetition rate as **early-warning signals** of degradation in long-form LLM generation — applying fractal/seismic methodology to AI telemetry.
+**Advanced Fractal Diagnostic Instrument for AI Phase Transitions**
 
-## Why This Matters (2026)
+We adapt early-warning telemetry concepts from complex systems (seismology, econophysics) to detect regime shifts in LLM generation — predicting repetition collapse **300–1200 tokens before** it becomes visible.
 
-| Problem | Solution |
-|---------|----------|
-| LLM long-context sessions degrade unpredictably (loops, repetition, hallucinations) | Fractal metrics detect degradation **300–1200 tokens early** |
-| Test-time compute scaling lacks stop-criteria | Hurst exponent + entropy provide cheap real-time monitoring |
-| No theoretical framework for LLM "phase transitions" | QO3/FIO bridges seismology, fractals, and AI dynamics |
+---
 
-## Key Insight
+## 🎯 Key Insight
 
-> **When the model starts looping, repetition rate rises sharply — but Hurst exponent and entropy often shift earlier, acting as "seismic precursors" before the visible collapse.**
+> When an LLM starts looping, the repetition rate rises sharply — but **Hurst exponent and entropy often shift earlier**, acting as "seismic precursors" before the visible collapse.
 
 This is analogous to how b-value changes and foreshock patterns precede major earthquakes.
 
 ---
 
-## Quickstart
+## 📊 Metrics Suite
 
-### Local Installation
-
-```bash
-git clone https://github.com/YOUR_USERNAME/LRD-AI-Telemetry-HeroDemo.git
-cd LRD-AI-Telemetry-HeroDemo
-
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-
-python demo.py --model distilgpt2 --max_new_tokens 2500
-```
-
-### Google Colab
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YOUR_USERNAME/LRD-AI-Telemetry-HeroDemo/blob/main/notebooks/hero_demo.ipynb)
-
-Open `notebooks/hero_demo.ipynb` and run all cells.
-
----
-
-## Output Examples
-
-After running `demo.py`, you'll find in `outputs/`:
-
-| File | Description |
-|------|-------------|
-| `entropy.png` | Token entropy over generation steps |
-| `repetition.png` | Repetition rate with threshold line |
-| `hurst.png` | Rolling Hurst exponent (fractal memory indicator) |
-| `combined_dashboard.png` | All metrics in one view |
-
-**Console output:**
-- First step where repetition > threshold
-- Mean entropy in 100 steps before that point
-- Hurst exponent trend before collapse
-- Last 1200 chars of generated text (to see loops)
-
----
-
-## Metrics Explained
-
-| Metric | What It Measures | Early Warning Signal |
-|--------|------------------|---------------------|
-| **Token Entropy** | Uncertainty in next-token distribution | Drops before repetition (model becomes "too confident") |
-| **Repetition Rate** | Fraction of tokens seen before in window | Direct measure of looping — but late signal |
-| **Hurst Exponent (H)** | Long-range dependence / fractal memory | H > 0.65 indicates persistent behavior → precursor |
-| **SID (Entropy Deficit)** | Cumulative information compression | Rising SID = model "running out of ideas" |
+| Metric | Domain | Signal Type | Interpretation |
+|--------|--------|-------------|----------------|
+| **Token Entropy** | Information | Early | Drops when model becomes "too confident" |
+| **Hurst Exponent (H)** | Fractal/Time | Early | H > 0.65 = persistent patterns (warning) |
+| **Higuchi Dimension (D)** | Fractal/Geometry | Early | D < 1.3 = increasing regularity (warning) |
+| **N-gram Repetition** | Sequence | Late | Strict loop detection (4-grams) |
+| **Spectral Entropy** | Frequency | Early | Low = narrowband signal (warning) |
+| **1/f Exponent (β)** | Spectral | Early | β > 1.5 = strong correlations |
+| **KL Drift** | Distribution | Early | Rising = regime instability |
 
 ### Interpretation Guide
 
 ```
-H ≈ 0.5  →  Random walk (healthy generation)
-H > 0.65 →  Persistent / trending (early warning)
-H > 0.80 →  Near-deterministic (collapse imminent)
+Hurst (H):
+  H ≈ 0.5   → Random walk (healthy generation)
+  H > 0.65  → ⚠️ Persistent patterns (early warning)
+  H > 0.80  → 🔴 Near-deterministic (collapse imminent)
+
+Higuchi (D):
+  D ≈ 1.5   → Complex, healthy signal
+  D < 1.3   → ⚠️ Increasing regularity (warning)
+  D → 1.0   → 🔴 Near-periodic (collapse)
+
+Theoretical relation: D ≈ 2 - H (sanity check for self-affine processes)
 ```
 
 ---
 
-## Theoretical Foundation: QO3/FIO Framework
+## 🚀 Quickstart
 
-This demo applies concepts from the **Fractal Information Ontology (FIO)** and **Quantum Ontological Observatory (QO3)** frameworks to AI systems:
-
-| Seismic Concept | AI Analogue |
-|-----------------|-------------|
-| b-value (Gutenberg-Richter) | Token probability distribution shape |
-| Foreshocks | Entropy/Hurst anomalies before collapse |
-| Mainshock | Repetition loop onset |
-| Long-Range Dependence | Persistent patterns in hidden states |
-
-The Fractal Composition Operator **Ψ** provides theoretical grounding for how multi-scale information combines in complex systems — applicable to both geological and neural dynamics.
-
----
-
-## Related Publications (Zenodo)
-
-This work is part of the **LRD Time Series** research community. Full methodology and theoretical foundations:
-
-| Record | Title | DOI |
-|--------|-------|-----|
-| Core Method | Fractal-Informational Seismic Regime Detection (QO3/FIO) v2.2 | [10.5281/zenodo.18145167](https://doi.org/10.5281/zenodo.18145167) |
-| LRD Analysis | Long-Range Dependence Analysis: DFA vs R/S Comparison | [10.5281/zenodo.18110450](https://doi.org/10.5281/zenodo.18110450) |
-| Fractal Operator | The Fractal Composition Operator Ψ: Definition and Axiomatic Foundation | [10.5281/zenodo.18102168](https://doi.org/10.5281/zenodo.18102168) |
-| FIO Theory | Fractal Information Ontology: Universal Constants | [10.5281/zenodo.18101985](https://doi.org/10.5281/zenodo.18101985) |
-| QO3 Framework | Quantum Ontological Observatory Implementation | [10.5281/zenodo.18072672](https://doi.org/10.5281/zenodo.18072672) |
-| Hurst Analysis | Hurst Exponent Estimation Methods | [10.5281/zenodo.18018292](https://doi.org/10.5281/zenodo.18018292) |
-| Foundation | LRD in Complex Systems: Theoretical Framework | [10.5281/zenodo.17800770](https://doi.org/10.5281/zenodo.17800770) |
-
-**Community:** [zenodo.org/communities/lrd-time-series](https://zenodo.org/communities/lrd-time-series/records)
-
----
-
-## Project Structure
-
-```
-LRD-AI-Telemetry-HeroDemo/
-├── README.md
-├── requirements.txt
-├── demo.py                    # Main entry point
-├── CITATION.cff               # GitHub citation
-├── zenodo.json                # Zenodo metadata
-├── LICENSE
-├── .gitignore
-├── src/
-│   ├── __init__.py
-│   ├── metrics.py             # Entropy, repetition, Hurst
-│   ├── generate.py            # Generation with telemetry
-│   └── visualization.py       # Plotting utilities
-├── notebooks/
-│   └── hero_demo.ipynb        # Colab-ready notebook
-├── outputs/                   # Generated plots (gitignored)
-└── docs/
-    └── METHODOLOGY.md         # Detailed methodology
-```
-
----
-
-## Advanced Usage
-
-### Custom Models
+### Installation
 
 ```bash
-# Test with larger models (requires GPU)
-python demo.py --model Qwen/Qwen2.5-7B-Instruct --max_new_tokens 5000
+git clone https://github.com/YOUR_USERNAME/LRD-AI-Telemetry-v2.1.git
+cd LRD-AI-Telemetry-v2.1
 
-# Adjust sensitivity
-python demo.py --rep_threshold 0.50 --hurst_warning 0.68
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-### Programmatic API
+### Run Interactive Demo
+
+```bash
+python app.py
+# Opens Gradio interface at http://localhost:7860
+```
+
+### Programmatic Usage
 
 ```python
-from src.generate import generate_with_metrics
-from src.metrics import hurst_exponent
+from config import RunConfig
+from generate import create_generator
+from metrics import rolling_metrics, compute_warning_score
 
-result = generate_with_metrics(
-    model=model,
-    tokenizer=tokenizer,
-    prompt="Your prompt here...",
-    max_new_tokens=3000,
-    rep_threshold=0.55,
+# Configure
+config = RunConfig(model_name="distilgpt2", seed=42)
+config.generation.max_tokens = 2000
+
+# Generate with telemetry
+generator = create_generator("distilgpt2", config)
+result = generator.generate(
+    prompt="Explain time series and regime shifts in detail...",
+    seed=42,
 )
 
-# Access metrics
-print(f"Collapse at step: {result.first_exceed_step}")
-print(f"Hurst before collapse: {result.hurst_before}")
-print(f"Entropy trend: {result.entropy_trend}")
+# Analyze
+import numpy as np
+entropy = np.array(result.telemetry.entropy_series)
+rolling = rolling_metrics(entropy, window=200, step=50)
+
+# Get warning score
+h, d = rolling['hurst'][-1], rolling['higuchi'][-1]
+se, beta = rolling['spectral_entropy'][-1], rolling['one_over_f'][-1]
+score, level = compute_warning_score(h, d, se, beta)
+
+print(f"Warning Score: {score:.1f}/100 ({level})")
+print(f"Final Hurst: {h:.3f}, Higuchi: {d:.3f}")
 ```
 
 ---
 
-## Contributing
+## 📁 Project Structure
 
-Contributions welcome! Especially:
-- Testing on more models (DeepSeek-R1, Llama-3.3, Gemma-2)
-- Additional fractal metrics (DFA α, spectral entropy)
-- Integration with inference frameworks (vLLM, TGI)
+```
+LRD-AI-Telemetry-v2.1/
+├── app.py              # Gradio UI (clean, no business logic)
+├── config.py           # Centralized thresholds + disclaimers
+├── metrics.py          # All fractal metrics + bootstrap CI
+├── generate.py         # Text generation + telemetry + early stop
+├── viz.py              # Plotly visualizations
+├── export.py           # Reproducibility package (ZIP)
+├── requirements.txt
+└── README.md
+```
 
 ---
 
-## Citation
+## ⚠️ Scientific Notes
 
-If you use this work, please cite:
+### What This Is
+
+- **Heuristic early-warning system** for LLM degradation
+- Adapts concepts from complex systems / seismology to AI
+- **Empirical thresholds** derived from preliminary experiments
+
+### What This Is NOT
+
+- Rigorous statistical analysis (DFA with CI recommended for papers)
+- Universal detector (calibrate for your model/prompt/task)
+- Replacement for proper statistical hypothesis testing
+
+### Methodological Caveats
+
+| Method | Caveat | Recommendation |
+|--------|--------|----------------|
+| **Hurst (R/S)** | Quick heuristic; can overestimate H on trends | Use DFA(1/2) for rigorous analysis |
+| **β ↔ H relation** | β ≈ 2H-1 holds for fGn, not always for real data | Treat β as empirical spectral slope |
+| **D ≈ 2-H** | Exact for ideal self-affine processes | Use as sanity check only |
+| **Thresholds** | Empirical, not universal | Calibrate per model/prompt |
+| **Fibonacci windows** | Experimental / hypothesis-driven | Compare with standard windows |
+
+### Entropy Non-Stationarity
+
+The entropy time series from LLM generation is typically **non-stationary** and **regime-dependent**. R/S Hurst is sensitive to trends and can show "false LRD". We recommend:
+
+1. Use metrics as **regime indicators**, not absolute measures
+2. Interpret with caution on short sequences (< 500 tokens)
+3. For publication, add DFA and bootstrap confidence intervals
+
+---
+
+## 📦 Export Package
+
+The tool generates a comprehensive reproducibility package (ZIP):
+
+```
+export_package/
+├── README.md              # Run summary
+├── metadata.json          # Config + results + disclaimers
+├── environment.json       # Python/library versions
+├── generated_text.txt     # Full output
+├── token_ids.json         # Token sequence
+├── metrics_per_step.csv   # Entropy, repetition per step
+├── rolling_metrics.csv    # Hurst, Higuchi, spectral, 1/f
+├── kl_drift.csv           # KL divergence (if computed)
+├── reproduce.py           # Script to reproduce analysis
+└── requirements.txt       # Dependencies
+```
+
+---
+
+## 🔬 Theoretical Foundation
+
+### QO3/FIO Framework
+
+This work applies the **Quantum Ontological Observatory (QO3)** and **Fractal Information Ontology (FIO)** frameworks to AI systems:
+
+| Seismic Concept | AI Analogue | Mathematical Link |
+|-----------------|-------------|-------------------|
+| Earthquake catalog | Token sequence | Time series of events |
+| b-value (Gutenberg-Richter) | Token probability shape | Power-law exponent |
+| Foreshocks | Entropy/Hurst anomalies | Precursor signals |
+| Mainshock | Repetition collapse | Phase transition |
+| Long-Range Dependence | Persistent patterns | Hurst H > 0.5 |
+
+### Universal Attractor Hypothesis
+
+The FIO framework proposes that complex systems converge to universal fractal attractors:
+
+- **H ≈ 0.65** (Hurst exponent)
+- **D ≈ 1.35** (fractal dimension)
+
+Deviations from these values may indicate regime transitions or system instability.
+
+---
+
+## 📚 Related Publications
+
+| DOI | Title |
+|-----|-------|
+| [10.5281/zenodo.18145167](https://doi.org/10.5281/zenodo.18145167) | Fractal-Informational Seismic Regime Detection (QO3/FIO) v2.2 |
+| [10.5281/zenodo.18110450](https://doi.org/10.5281/zenodo.18110450) | Long-Range Dependence Analysis: DFA vs R/S |
+| [10.5281/zenodo.18102168](https://doi.org/10.5281/zenodo.18102168) | The Fractal Composition Operator Ψ |
+| [10.5281/zenodo.18101985](https://doi.org/10.5281/zenodo.18101985) | Fractal Information Ontology: Universal Constants |
+| [10.5281/zenodo.18072672](https://doi.org/10.5281/zenodo.18072672) | Quantum Ontological Observatory Implementation |
+| [10.5281/zenodo.18018292](https://doi.org/10.5281/zenodo.18018292) | Hurst Exponent Estimation Methods |
+| [10.5281/zenodo.17800770](https://doi.org/10.5281/zenodo.17800770) | LRD in Complex Systems: Theoretical Framework |
+
+**Community:** [zenodo.org/communities/lrd-time-series](https://zenodo.org/communities/lrd-time-series)
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Priority areas:
+
+- [ ] DFA implementation (parallel to R/S)
+- [ ] Bootstrap CI for all rolling metrics
+- [ ] Integration with vLLM / TGI
+- [ ] Benchmarks on more models (Llama, Qwen, DeepSeek)
+- [ ] Auto-calibration of thresholds
+
+---
+
+## 📜 Citation
 
 ```bibtex
-@software{chechelnitsky_2026_llm_precursors,
+@software{chechelnitsky_2026_lrd_telemetry,
   author       = {Chechelnitsky, Igor},
   title        = {Seismic Precursors of LLM Degradation: LRD/QO3/FIO Bridge},
   year         = 2026,
   publisher    = {Zenodo},
+  version      = {2.1},
   doi          = {10.5281/zenodo.18145167},
   url          = {https://doi.org/10.5281/zenodo.18145167}
 }
@@ -201,13 +242,13 @@ If you use this work, please cite:
 
 ---
 
-## License
+## 📄 License
 
 MIT License — see [LICENSE](LICENSE)
 
 ---
 
-## Author
+## 👤 Author
 
 **Igor Chechelnitsky**  
 Independent Researcher, Ashkelon, Israel  
@@ -215,4 +256,4 @@ ORCID: [0009-0007-4607-1946](https://orcid.org/0009-0007-4607-1946)
 
 ---
 
-*"The same fractal patterns that predict earthquakes can predict when an AI will start repeating itself."*
+*"We adapt early-warning telemetry concepts from complex systems to detect regime shifts in LLM generation."*
