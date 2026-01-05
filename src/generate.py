@@ -1,94 +1,68 @@
 """
-Long-form text generation with fractal telemetry.
+Text Generation with Fractal Telemetry v2.1
 
-Generates text while tracking entropy, repetition, and Hurst exponent
-to detect degradation early.
+Features:
+- Sliding window context
+- Per-step entropy and distribution tracking
+- N-gram repetition monitoring
+- KL drift computation
+- Early stopping on degradation signals
+- Reproducible via seed
 
-Based on QO3/FIO framework:
-https://doi.org/10.5281/zenodo.18145167
+Author: Igor Chechelnitsky
+ORCID: 0009-0007-4607-1946
 """
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
-
+from typing import List, Optional, Dict, Any
 import numpy as np
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from .metrics import (
+from metrics import (
     token_entropy_from_logits,
+    get_token_distribution,
     repetition_rate,
-    hurst_exponent,
-    rolling_hurst,
-    entropy_deficit_sid,
-    detect_regime_change,
+    ngram_repetition_rate,
+    seed_everything,
 )
+from config import RunConfig, GenerationConfig
 
 
 @dataclass
-class RunResult:
-    """Results from a generation run with telemetry."""
+class TelemetryData:
+    """Raw telemetry collected during generation."""
     
-    # Generated text
+    entropy_series: List[float] = field(default_factory=list)
+    repetition_series: List[float] = field(default_factory=list)
+    ngram_rep_series: List[float] = field(default_factory=list)
+    distributions: List[np.ndarray] = field(default_factory=list)
+    token_ids: List[int] = field(default_factory=list)
+    
+    # Generation metadata
+    total_steps: int = 0
+    stopped_early: bool = False
+    stop_reason: Optional[str] = None
+    stop_step: Optional[int] = None
+
+
+@dataclass
+class GenerationResult:
+    """Complete result from a generation run."""
+    
     text: str
+    telemetry: TelemetryData
+    config: Dict[str, Any]
     
-    # Per-step metrics
-    entropy_series: List[float]
-    repetition_series: List[float]
+    def get_entropy_array(self) -> np.ndarray:
+        return np.array(self.telemetry.entropy_series)
     
-    # Hurst analysis (computed at intervals)
-    hurst_positions: List[int] = field(default_factory=list)
-    hurst_series: List[float] = field(default_factory=list)
-    
-    # SID (cumulative entropy deficit)
-    sid_series: Optional[np.ndarray] = None
-    
-    # Detection results
-    first_exceed_step: Optional[int] = None  # First repetition > threshold
-    first_warning_step: Optional[int] = None  # First Hurst/entropy warning
-    
-    # Summary stats
-    mean_entropy_before: Optional[float] = None
-    hurst_before_collapse: Optional[float] = None
-    warning_lead_time: Optional[int] = None  # Tokens between warning and collapse
-    
-    def summary(self) -> str:
-        """Human-readable summary of the run."""
-        lines = []
-        lines.append("=" * 60)
-        lines.append("GENERATION TELEMETRY SUMMARY")
-        lines.append("=" * 60)
-        
-        lines.append(f"Total tokens generated: {len(self.entropy_series)}")
-        lines.append(f"Mean entropy: {np.mean(self.entropy_series):.4f}")
-        
-        if self.hurst_series:
-            lines.append(f"Final Hurst exponent: {self.hurst_series[-1]:.4f}")
-        
-        if self.first_exceed_step is not None:
-            lines.append(f"\n⚠️  Repetition collapse at step: {self.first_exceed_step}")
-            
-            if self.mean_entropy_before is not None:
-                lines.append(f"   Mean entropy before collapse: {self.mean_entropy_before:.4f}")
-            
-            if self.hurst_before_collapse is not None:
-                lines.append(f"   Hurst before collapse: {self.hurst_before_collapse:.4f}")
-        
-        if self.first_warning_step is not None:
-            lines.append(f"\n🔔 Early warning at step: {self.first_warning_step}")
-            
-            if self.warning_lead_time is not None:
-                lines.append(f"   Lead time: {self.warning_lead_time} tokens before collapse")
-        
-        if self.first_exceed_step is None:
-            lines.append("\n✅ No repetition collapse detected")
-        
-        lines.append("=" * 60)
-        return "\n".join(lines)
+    def get_token_ids(self) -> List[int]:
+        return self.telemetry.token_ids
 
 
-def nucleus_sample_next_token(
+def nucleus_sample(
     logits: torch.Tensor,
     temperature: float = 1.0,
     top_p: float = 0.95,
@@ -96,22 +70,15 @@ def nucleus_sample_next_token(
     """
     Nucleus (top-p) sampling for next token.
     
-    Args:
-        logits: Tensor of shape [vocab_size]
-        temperature: Sampling temperature
-        top_p: Cumulative probability threshold
-    
-    Returns:
-        Selected token ID
+    Deterministic given fixed seed.
     """
     logits = logits / max(temperature, 1e-6)
     sorted_logits, sorted_idx = torch.sort(logits, descending=True)
     sorted_probs = torch.softmax(sorted_logits, dim=-1)
     cum = torch.cumsum(sorted_probs, dim=-1)
 
-    # Mask tokens after cumulative prob > top_p
     cutoff = cum > top_p
-    cutoff[0] = False  # Always keep at least one token
+    cutoff[0] = False
     sorted_logits[cutoff] = -1e10
 
     filtered_probs = torch.softmax(sorted_logits, dim=-1)
@@ -119,139 +86,186 @@ def nucleus_sample_next_token(
     return int(sorted_idx[pick].item())
 
 
-def generate_with_metrics(
-    model,
-    tokenizer,
-    prompt: str,
-    max_new_tokens: int = 2500,
-    rep_threshold: float = 0.55,
-    sliding_window: int = 800,
-    temperature: float = 1.0,
-    top_p: float = 0.95,
-    hurst_window: int = 200,
-    hurst_step: int = 100,
-    hurst_warning: float = 0.65,
-    verbose: bool = True,
-) -> RunResult:
+class Generator:
     """
-    Generate text with full fractal telemetry.
-    
-    Uses sliding context window to bypass small model context limits.
-    Records entropy, repetition rate, and Hurst exponent per step.
-    
-    Args:
-        model: HuggingFace model
-        tokenizer: HuggingFace tokenizer
-        prompt: Initial prompt
-        max_new_tokens: Maximum tokens to generate
-        rep_threshold: Repetition rate threshold for collapse detection
-        sliding_window: Context window size for generation
-        temperature: Sampling temperature
-        top_p: Nucleus sampling threshold
-        hurst_window: Window for Hurst calculation
-        hurst_step: Steps between Hurst calculations
-        hurst_warning: Hurst threshold for early warning
-        verbose: Print progress
-    
-    Returns:
-        RunResult with all telemetry data
+    Text generator with telemetry collection and early stopping.
     """
-    device = model.device
-    model.eval()
-
-    full_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)[0]
-
-    entropy_series: List[float] = []
-    repetition_series: List[float] = []
-    hurst_positions: List[int] = []
-    hurst_series: List[float] = []
-
-    with torch.no_grad():
-        for step in range(max_new_tokens):
-            # Sliding window context
-            ctx = full_ids[-sliding_window:] if len(full_ids) > sliding_window else full_ids
-            out = model(ctx.unsqueeze(0))
-            logits = out.logits[0, -1, :]
-
-            # Record entropy
-            ent = token_entropy_from_logits(logits)
-            entropy_series.append(ent)
-
-            # Sample next token
-            next_id = nucleus_sample_next_token(
-                logits=logits,
-                temperature=temperature,
-                top_p=top_p,
-            )
-
-            full_ids = torch.cat([full_ids, torch.tensor([next_id], device=device)])
-            
-            # Record repetition
-            rep = repetition_rate(full_ids.tolist(), window=200)
-            repetition_series.append(rep)
-
-            # Calculate Hurst at intervals
-            if step > hurst_window and step % hurst_step == 0:
-                recent_ent = np.array(entropy_series[-hurst_window:])
-                h = hurst_exponent(recent_ent)
-                
-                if not np.isnan(h):
-                    hurst_positions.append(step)
-                    hurst_series.append(h)
-                    
-                    if verbose and h > hurst_warning:
-                        print(f"⚠️  Step {step}: Hurst = {h:.3f} (warning threshold: {hurst_warning})")
-
-            # Progress
-            if verbose and step % 500 == 0 and step > 0:
-                print(f"Step {step}/{max_new_tokens} | Entropy: {ent:.2f} | Rep: {rep:.3f}")
-
-    text = tokenizer.decode(full_ids, skip_special_tokens=True)
     
-    # Calculate SID
-    sid_series = entropy_deficit_sid(np.array(entropy_series))
-
-    # Find first repetition collapse
-    first_exceed = next((i for i, v in enumerate(repetition_series) if v > rep_threshold), None)
-    
-    # Calculate stats before collapse
-    mean_ent_before = None
-    hurst_before = None
-    
-    if first_exceed is not None:
-        start = max(0, first_exceed - 100)
-        if first_exceed > start:
-            mean_ent_before = float(np.mean(entropy_series[start:first_exceed]))
+    def __init__(
+        self,
+        model,
+        tokenizer,
+        device: str,
+        config: Optional[RunConfig] = None,
+    ):
+        self.model = model
+        self.tokenizer = tokenizer
+        self.device = device
+        self.config = config or RunConfig()
         
-        # Find last Hurst before collapse
-        for pos, h in zip(reversed(hurst_positions), reversed(hurst_series)):
-            if pos < first_exceed:
-                hurst_before = h
-                break
+        self.model.eval()
     
-    # Find early warning
-    first_warning = detect_regime_change(
-        np.array(entropy_series),
-        hurst_series,
-        hurst_positions,
-        hurst_threshold=hurst_warning,
-    )
-    
-    # Calculate lead time
-    lead_time = None
-    if first_warning is not None and first_exceed is not None:
-        lead_time = first_exceed - first_warning if first_exceed > first_warning else None
+    def generate(
+        self,
+        prompt: str,
+        max_tokens: Optional[int] = None,
+        seed: Optional[int] = None,
+        progress_callback=None,
+        store_distributions: bool = False,
+    ) -> GenerationResult:
+        """
+        Generate text with full telemetry.
+        
+        Args:
+            prompt: Initial text
+            max_tokens: Override config max_tokens
+            seed: Random seed for reproducibility
+            progress_callback: Function(step, max_steps) for progress updates
+            store_distributions: Whether to store full token distributions (memory intensive)
+        
+        Returns:
+            GenerationResult with text and telemetry
+        """
+        gen_config = self.config.generation
+        
+        if max_tokens is None:
+            max_tokens = gen_config.max_tokens
+        
+        # Set seed if provided
+        actual_seed = seed if seed is not None else self.config.seed
+        if actual_seed is not None:
+            seed_everything(actual_seed)
+        
+        # Initialize
+        full_ids = self.tokenizer.encode(prompt, return_tensors="pt").to(self.device)[0]
+        sliding_window = gen_config.sliding_window
+        
+        telemetry = TelemetryData()
+        telemetry.token_ids = full_ids.tolist()
+        
+        # For early stopping
+        baseline_entropy = None
+        low_entropy_count = 0
+        
+        with torch.no_grad():
+            for step in range(max_tokens):
+                # Context window
+                ctx = full_ids[-sliding_window:] if len(full_ids) > sliding_window else full_ids
+                out = self.model(ctx.unsqueeze(0))
+                logits = out.logits[0, -1, :]
+                
+                # Record entropy
+                ent = token_entropy_from_logits(logits)
+                telemetry.entropy_series.append(ent)
+                
+                # Store distribution if requested
+                if store_distributions:
+                    dist = get_token_distribution(logits)
+                    # Compress: keep only top-k for memory
+                    top_k = 1000
+                    top_indices = np.argsort(dist)[-top_k:]
+                    sparse_dist = np.zeros_like(dist)
+                    sparse_dist[top_indices] = dist[top_indices]
+                    telemetry.distributions.append(sparse_dist)
+                
+                # Sample next token
+                next_id = nucleus_sample(
+                    logits,
+                    temperature=gen_config.temperature,
+                    top_p=gen_config.top_p,
+                )
+                
+                full_ids = torch.cat([full_ids, torch.tensor([next_id], device=self.device)])
+                telemetry.token_ids.append(next_id)
+                
+                # Record repetition metrics
+                token_list = full_ids.tolist()
+                telemetry.repetition_series.append(
+                    repetition_rate(token_list, window=200)
+                )
+                telemetry.ngram_rep_series.append(
+                    ngram_repetition_rate(token_list, n=4, window=200)
+                )
+                
+                # Establish baseline
+                if step == self.config.metrics.baseline_window - 1:
+                    baseline_entropy = np.mean(telemetry.entropy_series)
+                
+                # Early stopping check
+                if gen_config.early_stop_enabled and baseline_entropy is not None:
+                    # Check n-gram repetition
+                    if telemetry.ngram_rep_series[-1] > gen_config.early_stop_ngram_threshold:
+                        telemetry.stopped_early = True
+                        telemetry.stop_reason = f"N-gram repetition exceeded {gen_config.early_stop_ngram_threshold}"
+                        telemetry.stop_step = step
+                        break
+                    
+                    # Check entropy collapse
+                    if ent < baseline_entropy * gen_config.early_stop_entropy_ratio:
+                        low_entropy_count += 1
+                        if low_entropy_count >= gen_config.early_stop_patience:
+                            telemetry.stopped_early = True
+                            telemetry.stop_reason = f"Entropy below {gen_config.early_stop_entropy_ratio}x baseline for {gen_config.early_stop_patience} steps"
+                            telemetry.stop_step = step
+                            break
+                    else:
+                        low_entropy_count = 0
+                
+                # Progress callback
+                if progress_callback and step % 50 == 0:
+                    progress_callback(step, max_tokens)
+        
+        telemetry.total_steps = len(telemetry.entropy_series)
+        
+        # Decode text
+        text = self.tokenizer.decode(full_ids, skip_special_tokens=True)
+        
+        # Build config dict
+        config_dict = {
+            'prompt_length': len(prompt),
+            'max_tokens': max_tokens,
+            'actual_tokens': telemetry.total_steps,
+            'seed': actual_seed,
+            'temperature': gen_config.temperature,
+            'top_p': gen_config.top_p,
+            'sliding_window': sliding_window,
+            'early_stop_enabled': gen_config.early_stop_enabled,
+            'stopped_early': telemetry.stopped_early,
+            'stop_reason': telemetry.stop_reason,
+        }
+        
+        return GenerationResult(
+            text=text,
+            telemetry=telemetry,
+            config=config_dict,
+        )
 
-    return RunResult(
-        text=text,
-        entropy_series=entropy_series,
-        repetition_series=repetition_series,
-        hurst_positions=hurst_positions,
-        hurst_series=hurst_series,
-        sid_series=sid_series,
-        first_exceed_step=first_exceed,
-        first_warning_step=first_warning,
-        mean_entropy_before=mean_ent_before,
-        hurst_before_collapse=hurst_before,
-        warning_lead_time=lead_time,
-    )
+
+# Model cache
+_MODEL_CACHE = {}
+
+
+def get_model(model_name: str, device: Optional[str] = None):
+    """Load model with caching."""
+    
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    
+    cache_key = (model_name, device)
+    
+    if cache_key not in _MODEL_CACHE:
+        print(f"Loading {model_name} on {device}...")
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name)
+        model = model.to(device)
+        model.eval()
+        _MODEL_CACHE[cache_key] = (model, tokenizer)
+        print(f"✅ {model_name} loaded")
+    
+    return _MODEL_CACHE[cache_key][0], _MODEL_CACHE[cache_key][1], device
+
+
+def create_generator(model_name: str, config: Optional[RunConfig] = None) -> Generator:
+    """Create a Generator instance with loaded model."""
+    model, tokenizer, device = get_model(model_name)
+    return Generator(model, tokenizer, device, config)
