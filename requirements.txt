@@ -1,15 +1,17 @@
-# Core dependencies
-numpy>=1.21.0
+# LRD-AI-Telemetry v2.1 Requirements
+
+# Core ML
 torch>=2.0.0
 transformers>=4.35.0
 accelerate>=0.24.0
 
-# Visualization
-matplotlib>=3.7.0
-
 # Scientific computing
+numpy>=1.21.0
 scipy>=1.10.0
+pandas>=2.0.0
 
-# Optional: for larger models
-# bitsandbytes>=0.41.0
-# flash-attn>=2.3.0
+# Visualization
+plotly>=5.18.0
+
+# Interface
+gradio>=4.44.0
