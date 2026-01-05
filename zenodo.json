@@ -1,0 +1,103 @@
+{
+  "title": "Seismic Precursors of LLM Degradation: LRD/QO3/FIO Bridge — Hero Demo",
+  "description": "Minimal reproducible demo applying fractal/seismic methodology (Long-Range Dependence, Hurst exponent, QO3/FIO framework) to detect early-warning signals of degradation in long-form LLM generation. Token-level entropy and Hurst exponent can predict repetition collapse 300-1200 tokens before visible degradation. Includes runnable script, Jupyter notebook, and visualization tools. This demo bridges earthquake science and AI telemetry, showing that the same fractal patterns that precede seismic events can predict when an LLM will start looping.",
+  "upload_type": "software",
+  "version": "1.0.0",
+  "publication_date": "2026-01-04",
+  "creators": [
+    {
+      "name": "Chechelnitsky, Igor",
+      "orcid": "0009-0007-4607-1946",
+      "affiliation": "Independent Researcher, Ashkelon, Israel"
+    }
+  ],
+  "keywords": [
+    "long-range dependence",
+    "LRD",
+    "DFA",
+    "Hurst exponent",
+    "fractal",
+    "regime shift",
+    "early warning",
+    "LLM telemetry",
+    "large language model",
+    "long context",
+    "agent loops",
+    "test-time compute",
+    "mode collapse",
+    "repetition detection",
+    "QO3",
+    "FIO",
+    "Fractal Information Ontology",
+    "seismic precursor"
+  ],
+  "license": "MIT",
+  "access_right": "open",
+  "communities": [
+    {
+      "identifier": "lrd-time-series"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.5281/zenodo.18145167",
+      "relation": "isSupplementTo",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.18110450",
+      "relation": "references",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.18102168",
+      "relation": "references",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.18101985",
+      "relation": "references",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.18072672",
+      "relation": "references",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.18018292",
+      "relation": "references",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.17800770",
+      "relation": "references",
+      "resource_type": "software",
+      "scheme": "doi"
+    }
+  ],
+  "subjects": [
+    {
+      "term": "Artificial Intelligence",
+      "scheme": "url",
+      "identifier": "https://id.loc.gov/authorities/subjects/sh85008180"
+    },
+    {
+      "term": "Time-series analysis",
+      "scheme": "url",
+      "identifier": "https://id.loc.gov/authorities/subjects/sh85135420"
+    },
+    {
+      "term": "Fractals",
+      "scheme": "url",
+      "identifier": "https://id.loc.gov/authorities/subjects/sh85051147"
+    }
+  ],
+  "notes": "Part of the LRD Time Series research community. See https://zenodo.org/communities/lrd-time-series for related work on Long-Range Dependence analysis."
+}

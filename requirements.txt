@@ -1,0 +1,15 @@
+# Core dependencies
+numpy>=1.21.0
+torch>=2.0.0
+transformers>=4.35.0
+accelerate>=0.24.0
+
+# Visualization
+matplotlib>=3.7.0
+
+# Scientific computing
+scipy>=1.10.0
+
+# Optional: for larger models
+# bitsandbytes>=0.41.0
+# flash-attn>=2.3.0

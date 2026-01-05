@@ -1,0 +1,87 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the related Zenodo records."
+title: "Seismic Precursors of LLM Degradation: LRD/QO3/FIO Bridge"
+type: software
+version: "1.0.0"
+date-released: "2026-01-04"
+
+authors:
+  - family-names: Chechelnitsky
+    given-names: Igor
+    orcid: "https://orcid.org/0009-0007-4607-1946"
+    affiliation: "Independent Researcher, Ashkelon, Israel"
+
+abstract: >-
+  Minimal reproducible demo applying fractal/seismic methodology 
+  (Long-Range Dependence, Hurst exponent, QO3/FIO framework) to detect 
+  early-warning signals of degradation in long-form LLM generation.
+  Token-level entropy and Hurst exponent can predict repetition collapse
+  300-1200 tokens before visible degradation.
+
+keywords:
+  - long-range dependence
+  - LRD
+  - Hurst exponent
+  - fractal
+  - LLM
+  - large language model
+  - telemetry
+  - early warning
+  - regime detection
+  - QO3
+  - FIO
+  - test-time compute
+
+license: MIT
+
+repository-code: "https://github.com/YOUR_USERNAME/LRD-AI-Telemetry-HeroDemo"
+
+references:
+  - type: software
+    title: "Fractal-Informational Seismic Regime Detection (QO3/FIO) v2.2"
+    authors:
+      - family-names: Chechelnitsky
+        given-names: Igor
+    doi: "10.5281/zenodo.18145167"
+    
+  - type: software
+    title: "Long-Range Dependence Analysis: DFA vs R/S Comparison"
+    authors:
+      - family-names: Chechelnitsky
+        given-names: Igor
+    doi: "10.5281/zenodo.18110450"
+    
+  - type: software
+    title: "The Fractal Composition Operator Ψ: Definition and Axiomatic Foundation"
+    authors:
+      - family-names: Chechelnitsky
+        given-names: Igor
+    doi: "10.5281/zenodo.18102168"
+    
+  - type: software
+    title: "Fractal Information Ontology: Universal Constants"
+    authors:
+      - family-names: Chechelnitsky
+        given-names: Igor
+    doi: "10.5281/zenodo.18101985"
+    
+  - type: software
+    title: "Quantum Ontological Observatory Implementation"
+    authors:
+      - family-names: Chechelnitsky
+        given-names: Igor
+    doi: "10.5281/zenodo.18072672"
+    
+  - type: software
+    title: "Hurst Exponent Estimation Methods"
+    authors:
+      - family-names: Chechelnitsky
+        given-names: Igor
+    doi: "10.5281/zenodo.18018292"
+    
+  - type: software
+    title: "LRD in Complex Systems: Theoretical Framework"
+    authors:
+      - family-names: Chechelnitsky
+        given-names: Igor
+    doi: "10.5281/zenodo.17800770"
