@@ -54,7 +54,7 @@ Theoretical relation: D ≈ 2 - H (sanity check for self-affine processes)
 ### Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/LRD-AI-Telemetry-v2.1.git
+git clone https://github.com/muhomor2/LRD-AI-Telemetry-v2.1.git
 cd LRD-AI-Telemetry-v2.1
 
 python -m venv .venv
